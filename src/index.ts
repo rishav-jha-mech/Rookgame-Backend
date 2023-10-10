@@ -1,14 +1,12 @@
 import bodyParser from "body-parser";
+import cors from "cors";
 import express from "express";
 import http from "http";
-import { Server } from "socket.io";
-import cors from "cors";
-import { db } from "./db";
-import gameRoutes from "./routes/gameRoutes";
-import Game from "./models/Game";
-import { v4 as uuidv4 } from "uuid";
 import { Types } from "mongoose";
-import type { IPlayer } from "./models/Game";
+import { Server } from "socket.io";
+import { db } from "./db";
+import Game from "./models/Game";
+import gameRoutes from "./routes/gameRoutes";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -45,11 +43,6 @@ app.use(
   }
 );
 
-// write a route to serve index.html
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
-});
-
 // Socket.io logic for handling connections and game events
 io.on("connection", (socket) => {
   console.log("Player connected:", socket.id);
@@ -60,7 +53,7 @@ io.on("connection", (socket) => {
     try {
       const game = await Game.findOne({
         "players.socketId": socket.id,
-      }).exec();
+      });
 
       if (game) {
         // If there is only one player who left the game
@@ -117,6 +110,8 @@ io.on("connection", (socket) => {
   });
   socket.on("join-game", async (data) => {
     const { gameId, player2Name, socketId } = JSON.parse(data);
+    console.log({ gameId, player2Name, socketId });
+    
     try {
       const game = await Game.findOne({
         _id: new Types.ObjectId(gameId),
