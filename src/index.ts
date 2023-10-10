@@ -5,6 +5,8 @@ import { Server } from "socket.io";
 import cors from "cors";
 import { db } from "./db";
 import gameRoutes from "./routes/gameRoutes";
+import Game from "./models/Game";
+import { v4 as uuidv4 } from "uuid";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -16,7 +18,8 @@ const io = new Server(httpServer, {
     credentials: true,
   },
 });
-app.options("*", cors());
+// Disable CORS
+app.use(cors());
 
 // Serve static files from the public folder
 app.use(express.static("public"));
@@ -46,21 +49,41 @@ app.get("/", (req, res) => {
 });
 
 // Socket.io logic for handling connections and game events
-io.on(
-  "connection",
-  (socket: {
-    id: any;
-    on: (arg0: string, arg1: { (data: any): void; (): void }) => void;
-    broadcast: { emit: (arg0: string, arg1: any) => void };
-  }) => {
-    console.log("Player connected:", socket.id);
+io.on("connection", (socket) => {
+  console.log("Player connected:", socket.id);
 
-    // Handle disconnections
-    socket.on("disconnect", () => {
-      console.log("Player disconnected:", socket.id);
+  // Handle disconnections
+  socket.on("disconnect", () => {
+    console.log("Player disconnected:", socket.id);
+  });
+  socket.on("join-game", async (data) => {
+    const { gameId, player2Name, socketId } = JSON.parse(data);
+    console.log({ gameId, player2Name, socketId });
+
+    const game = await Game.findOne({
+      _id: gameId,
     });
-  }
-);
+    if (game?.players.length == 2) {
+      socket.emit("already-busy");
+      return;
+    }
+    const updatedGame = await Game.findOneAndUpdate(
+      {
+        _id: gameId,
+      },
+      {
+        $push: {
+          players: {
+            playerName: player2Name,
+            socketId,
+          },
+        },
+      },
+      { new: true }
+    ).lean();
+    socket.emit("start-game", updatedGame);
+  });
+});
 
 db.once("open", function () {
   // Start your Express app here

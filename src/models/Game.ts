@@ -16,24 +16,14 @@ interface IGameState {
 }
 
 export interface IGame extends Document {
-  gameId: string;
   players: IPlayer[];
   gameState: IGameState;
 }
 
 const gameSchema = new Schema<IGame>(
   {
-    gameId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     players: [
       {
-        playerId: {
-          type: String,
-          required: true,
-        },
         playerName: {
           type: String,
           required: true,
