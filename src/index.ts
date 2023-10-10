@@ -176,15 +176,27 @@ io.on("connection", (socket) => {
         const otherPlayer = updatedGame.players.find(
           (player) => player.socketId != socketId
         );
-        if (!otherPlayer) {
-          throw new Error("Other player not found");
-        }
-        console.log(
-          "UPDATE to other player",
-          otherPlayer.socketId,
-          otherPlayer.playerName
+        const currentPlayer = updatedGame.players.find(
+          (player) => player.socketId == socketId
         );
-
+        if (!otherPlayer || !currentPlayer) {
+          throw new Error("Player not found");
+        }
+        if (rookRow == 7 && rookCol == 0) {
+          const updatedGame = await Game.findOneAndUpdate(
+            {
+              _id: gameId,
+            },
+            {
+              $set: {
+                "gameState.isGameCompleted": true,
+                "gameState.winner": currentPlayer.playerName,
+                "gameState.reason": "Rook reached the end",
+              },
+            },
+            { new: true }
+          );
+        }
         socket
           .to(otherPlayer.socketId)
           .emit("update-rook-position", { rookRow, rookCol });
