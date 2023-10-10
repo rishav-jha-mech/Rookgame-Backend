@@ -78,7 +78,7 @@ io.on("connection", (socket) => {
           let loser = {
             playerName: "",
             socketId: "",
-          }
+          };
           game?.players.map((player) => {
             if (player.socketId != socket.id) winner = player;
           });
@@ -99,8 +99,15 @@ io.on("connection", (socket) => {
             },
             { new: true }
           );
-          io.to(game.players[0].socketId).emit("game-ended", updatedGame);
-          io.emit("game-ended", updatedGame);
+          if (!updatedGame) {
+            throw new Error("Game not found");
+          }
+          socket
+            .to(updatedGame.players[0].socketId)
+            .emit("game-ended", updatedGame);
+          socket
+            .to(updatedGame.players[1].socketId)
+            .emit("game-ended", updatedGame);
         }
       }
       return game;
