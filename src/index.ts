@@ -111,7 +111,7 @@ io.on("connection", (socket) => {
   socket.on("join-game", async (data) => {
     const { gameId, player2Name, socketId } = JSON.parse(data);
     console.log({ gameId, player2Name, socketId });
-    
+
     try {
       const game = await Game.findOne({
         _id: new Types.ObjectId(gameId),
@@ -155,6 +155,43 @@ io.on("connection", (socket) => {
       // game not found
       socket.emit("game-not-found");
       console.error(`Error in join-game socket event ${error}`);
+    }
+  });
+  socket.on("rook-moved", async (data) => {
+    try {
+      const { gameId, socketId, rookRow, rookCol } = JSON.parse(data);
+      if (!gameId && !socketId && !rookCol && !rookCol) {
+        throw new Error("Invalid data");
+      }
+      if (rookCol < 0 || rookCol > 7 || rookRow < 0 || rookRow > 7) {
+        throw new Error("Invalid data");
+      }
+      const updatedGame = await Game.findOne({
+        _id: gameId,
+      }).lean();
+      if (!updatedGame) {
+        throw new Error("Game Not Found");
+      }
+      if (updatedGame) {
+        const otherPlayer = updatedGame.players.find(
+          (player) => player.socketId != socketId
+        );
+        if (!otherPlayer) {
+          throw new Error("Other player not found");
+        }
+        console.log(
+          "UPDATE to other player",
+          otherPlayer.socketId,
+          otherPlayer.playerName
+        );
+
+        socket
+          .to(otherPlayer.socketId)
+          .emit("update-rook-position", { rookRow, rookCol });
+      }
+    } catch (error) {
+      socket.emit("game-not-found");
+      console.error(`Error in move-made socket event ${error}`);
     }
   });
 });

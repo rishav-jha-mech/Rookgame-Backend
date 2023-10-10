@@ -45,6 +45,10 @@ const gameSchema = new Schema<IGame>(
         required: true,
         default: false,
       },
+      turn: {
+        type: String,
+        default: "X",
+      },
       gameStartTime: {
         type: Date,
       },
