@@ -7,6 +7,8 @@ import { db } from "./db";
 import gameRoutes from "./routes/gameRoutes";
 import Game from "./models/Game";
 import { v4 as uuidv4 } from "uuid";
+import { Types } from "mongoose";
+import type { IPlayer } from "./models/Game";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -53,35 +55,105 @@ io.on("connection", (socket) => {
   console.log("Player connected:", socket.id);
 
   // Handle disconnections
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     console.log("Player disconnected:", socket.id);
+    try {
+      const game = await Game.findOne({
+        "players.socketId": socket.id,
+      }).exec();
+
+      if (game) {
+        // If there is only one player who left the game
+        if (game?.players.length == 1) {
+          await Game.findOneAndRemove({
+            _id: new Types.ObjectId(game?._id),
+          }).lean();
+          return;
+        } else {
+          // Player disconnected has lost the game and the other player has won
+          let winner = {
+            playerName: "",
+            socketId: "",
+          };
+          let loser = {
+            playerName: "",
+            socketId: "",
+          }
+          game?.players.map((player) => {
+            if (player.socketId != socket.id) winner = player;
+          });
+          game?.players.map((player) => {
+            if (player.socketId == socket.id) loser = player;
+          });
+
+          const updatedGame = await Game.findOneAndUpdate(
+            {
+              _id: new Types.ObjectId(game?._id),
+            },
+            {
+              $set: {
+                "gameState.isGameCompleted": true,
+                "gameState.winner": winner?.playerName,
+                "gameState.reason": `${loser?.playerName} disconnected`,
+              },
+            },
+            { new: true }
+          );
+          io.to(game.players[0].socketId).emit("game-ended", updatedGame);
+          io.emit("game-ended", updatedGame);
+        }
+      }
+      return game;
+    } catch (error) {
+      console.error(`Error in join-game socket event ${error}`);
+    }
   });
   socket.on("join-game", async (data) => {
     const { gameId, player2Name, socketId } = JSON.parse(data);
-    console.log({ gameId, player2Name, socketId });
-
-    const game = await Game.findOne({
-      _id: gameId,
-    });
-    if (game?.players.length == 2) {
-      socket.emit("already-busy");
-      return;
-    }
-    const updatedGame = await Game.findOneAndUpdate(
-      {
-        _id: gameId,
-      },
-      {
-        $push: {
-          players: {
-            playerName: player2Name,
-            socketId,
+    try {
+      const game = await Game.findOne({
+        _id: new Types.ObjectId(gameId),
+      });
+      if (!game) {
+        console.log("game-not-found");
+        socket.emit("game-not-found");
+        return;
+      } else if (game?.gameState.isGameCompleted) {
+        console.log("game-ended");
+        socket.emit("game-ended", game);
+      } else if (game?.players.length == 2) {
+        console.log("already-busy");
+        socket.emit("already-busy");
+        return;
+      } else {
+        const updatedGame = await Game.findOneAndUpdate(
+          {
+            _id: gameId,
           },
-        },
-      },
-      { new: true }
-    ).lean();
-    socket.emit("start-game", updatedGame);
+          {
+            $push: {
+              players: {
+                playerName: player2Name,
+                socketId,
+              },
+            },
+          },
+          { new: true }
+        ).lean();
+        if (updatedGame) {
+          console.log(`${updatedGame.players[0].socketId}`);
+          console.log(`${updatedGame.players[1].socketId}`);
+          socket
+            .to(`${updatedGame.players[0].socketId}`)
+            .emit("start-game", updatedGame);
+          socket.emit("start-game", updatedGame);
+        }
+      }
+    } catch (error) {
+      // game not found
+      socket.emit("game-not-found");
+      console.error(`Error in join-game socket event ${error}`);
+    }
   });
 });
 
