@@ -62,6 +62,8 @@ io.on("connection", (socket) => {
             _id: new Types.ObjectId(game?._id),
           }).lean();
           return;
+        } else if (game?.gameState.isGameCompleted) {
+          return;
         } else {
           // Player disconnected has lost the game and the other player has won
           let winner = {
@@ -183,7 +185,7 @@ io.on("connection", (socket) => {
           throw new Error("Player not found");
         }
         if (rookRow == 7 && rookCol == 0) {
-          const updatedGame = await Game.findOneAndUpdate(
+          await Game.findOneAndUpdate(
             {
               _id: gameId,
             },
