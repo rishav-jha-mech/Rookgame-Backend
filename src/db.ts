@@ -1,14 +1,26 @@
-import mongoose from "mongoose";
 import { MONGO_DB_URL } from "./constants";
 
-mongoose.connect(MONGO_DB_URL as string);
+import { MongoClient, ServerApiVersion } from "mongodb";
 
-// Get the default connection
-export const db = mongoose.connection;
-
-// Bind connection to error event (to get notification of connection errors)
-db.on("error", console.error.bind(console, "MongoDB connection error:"));
-db.once("open", function () {
-  console.log("Connected to MongoDB");
-  // Start your Express app here
+export const db = new MongoClient(MONGO_DB_URL, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
 });
+async function run() {
+  try {
+    // Connect the client to the server	(optional starting in v4.7)
+    await db.connect();
+    // Send a ping to confirm a successful connection
+    await db.db("admin").command({ ping: 1 });
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
+  } finally {
+    // Ensures that the client will close when you finish/error
+    await db.close();
+  }
+}
+run().catch(console.dir);

@@ -30,6 +30,12 @@ app.use(bodyParser.json());
 // Set up routes
 app.use("/api/games", gameRoutes); // Mount game routes under '/api/games'
 
+app.get("/", (req, res) => {
+  res.json({
+    message: "Welcome to the CueMath Rook Game API",
+  });
+});
+
 // Error handling middleware
 app.use(
   (
