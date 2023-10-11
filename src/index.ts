@@ -208,6 +208,54 @@ io.on("connection", (socket) => {
       console.error(`Error in move-made socket event ${error}`);
     }
   });
+  socket.on("timer-ended", async (data) => {
+    try {
+      const { gameId, socketId } = JSON.parse(data);
+      if (!gameId && !socketId) {
+        throw new Error("Invalid data");
+      }
+      const game = await Game.findOne({
+        _id: gameId,
+      });
+      if (!game) {
+        throw new Error("Game Not Found");
+      }
+      if (game?.gameState.isGameCompleted) {
+        return;
+      }
+      const otherPlayer = game.players.find(
+        (player) => player.socketId != socketId
+      );
+      const currentPlayer = game.players.find(
+        (player) => player.socketId == socketId
+      );
+      if (!otherPlayer || !currentPlayer) {
+        throw new Error("Player not found");
+      }
+      const updatedGame = await Game.findOneAndUpdate(
+        {
+          _id: gameId,
+        },
+        {
+          $set: {
+            "gameState.isGameCompleted": true,
+            "gameState.winner": currentPlayer.playerName,
+            "gameState.reason": `${otherPlayer.playerName} did not move on Time`,
+          },
+        },
+        { new: true }
+      );
+      socket.to(otherPlayer.socketId).emit("you-win", updatedGame);
+      console.log("timer-ended-block");
+    } catch (error:any) {
+      if (`${error}`.includes("Game Not Found")) {
+        socket.emit("game-not-found");
+      } else {
+        socket.emit("already-busy");
+      }
+      console.error(`Error in timer-ended socket event ${error}`);
+    }
+  });
 });
 
 db.once("open", function () {
