@@ -1,24 +1,18 @@
 import { Request, Response } from "express";
-import Game from "../models/Game"; // Import your Game model
-import { v4 as uuidv4 } from "uuid";
+import Game from "../models/Game";
 
 class CreateAGameController {
   public async createNewGame(req: Request, res: Response): Promise<void> {
     try {
       const { playerName, socketId } = req.body;
-      console.log({ playerName, socketId });
 
-      if (!playerName || !socketId) {        
+      if (!playerName || !socketId) {
         res
           .status(400)
           .json({ error: "Playername or SocketId missing in request" });
         return;
       }
-
-      const gameId = uuidv4();
-
       const newGame = new Game({
-        gameId,
         players: [
           {
             playerName,
@@ -36,6 +30,26 @@ class CreateAGameController {
       res
         .status(200)
         .json({ message: "Game created successfully", game: newGame });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+  public async checkGameExists(req: Request, res: Response): Promise<void> {
+    try {
+      const { gameId } = req.body;
+      const game = await Game.findOne({
+        _id: gameId,
+      });
+      if (!game) {
+        res.status(404).json({ error: "Game not found" });
+        return;
+      }
+      if (game.gameState.isGameStarted || game.players.length == 2) {
+        res.status(400).json({ error: "Game already started" });
+        return;
+      }
+      res.status(200).json({ message: "Game found", game });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal Server Error" });
