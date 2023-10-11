@@ -52,7 +52,7 @@
 #### 1. Clone the repository
 
 ```
-git clone https://github.com/rishav-jha-mech/Rookgame-Backend
+git clone https://github.com/rishav-jha-mech/Rookgame-Backend.git
 ```
 
 #### 2. Install the packages
