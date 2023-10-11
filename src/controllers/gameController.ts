@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Game from "../models/Game";
+import { Types } from "mongoose";
 
 class CreateAGameController {
   public async createNewGame(req: Request, res: Response): Promise<void> {
@@ -39,10 +40,10 @@ class CreateAGameController {
     try {
       const { gameId } = req.body;
       const game = await Game.findOne({
-        _id: gameId,
+        _id: new Types.ObjectId(gameId),
       });
       if (!game) {
-        res.status(404).json({ error: "Game not found" });
+        res.status(404).json({ error: "Game not found, check game id or create a new game" });
         return;
       }
       if (game.gameState.isGameStarted || game.players.length == 2) {
@@ -52,6 +53,9 @@ class CreateAGameController {
       res.status(200).json({ message: "Game found", game });
     } catch (error) {
       console.error(error);
+      if (`${error}`.includes("BSONError: Argument passed in must be a string of 12 bytes or a string of 24 hex characters or an integer")) {
+        res.status(404).json({ error: "Game not found, check game id or create a new game" });
+      }
       res.status(500).json({ error: "Internal Server Error" });
     }
   }
