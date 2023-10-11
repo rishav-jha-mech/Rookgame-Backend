@@ -5,6 +5,10 @@
 </p>
 
 <p align="center">
+  <a href="https://cue-math-hiring.vercel.app/" rel="noopener">Play Rook Game</a>
+</p>
+
+<p align="center">
   <i> This Rook ain't no Castle!</i>
 </p>
 
@@ -12,11 +16,14 @@
 
 - [Rook Game Backend](#rook-game-backend)
 - [Table of Contents](#table-of-contents)
+- [Introduction](#introduction)
+- [Game Rules](#game-rules)
 - [Tech Stack for Backend](#tech-stack-for-backend)
 - [Installation](#installation)
     - [1. Clone the repository](#1-clone-the-repository)
     - [2. Install the packages](#2-install-the-packages)
     - [3. Run the server](#3-run-the-server)
+- [Project File Structure](#project-file-structure)
 - [API Endpoints](#api-endpoints)
     - [1. Create a new game](#1-create-a-new-game)
     - [2. Check if game exists](#2-check-if-game-exists)
@@ -37,14 +44,37 @@
 - [Learning Outcomes](#learning-outcomes)
 - [Future Enhancements](#future-enhancements)
 
+
+## Introduction
+
+Welcome to the Rook Move Game, a thrilling 1v1 chess-inspired challenge where strategic thinking and quick decision-making are the keys to victory! In this fast-paced game, players navigate an 8x8 chessboard, guiding their rook pieces to race to the bottom-left corner before their opponent does. Let the battle of wits begin!
+
+## Game Rules
+
+1. **Objective:** The goal of the game is to reach the bottom-left corner of the 8x8 chessboard before your opponent.
+
+2. **Starting Position:** Players begin with their rook pieces at the top-right corner of the chessboard.
+
+3. **Moves:** On each turn, a player can move their rook any number of steps to the left or down. Diagonal moves and movements in other directions are not allowed.
+
+4. **Multiplayer Gameplay:** This game supports real-time multiplayer functionality. Players can connect and compete against each other in real-time matches.
+
+5. **Turn Timer:** Each player has 30 seconds to make their move. If a player fails to make a move within the allocated time, the game ends, and their opponent wins.
+
+6. **Victory:** The first player to reach the bottom-left corner of the chessboard wins the game and is declared the ultimate Rook Move champion!
+
+Are you ready to outmaneuver your opponent, plan your moves wisely, and claim victory in the Rook Move Game? Let the race to the finish line begin!
+
+
+
 ## Tech Stack for Backend
 
-1. Node.js - JavaScript runtime environment
-2. Express.js - Web application framework
-3. MongoDB - NoSQL database (I have used MongoDB Atlas for cloud hosting)
-4. Socket.io - Real-time communication library
-5. TypeScript - Programming language with static typing
-6. Render - Hosted on Render
+- Node.js - JavaScript runtime environment
+- Express.js - Web application framework
+- MongoDB - NoSQL database (I have used MongoDB Atlas for cloud hosting)
+- Socket.io - Real-time communication library
+- TypeScript - Programming language with static typing
+- Render - Hosted on Render
 
 
 ## Installation
@@ -74,6 +104,23 @@ MONGO_DB_URL=mongodb+srv://<username>:<password>@<databaseurl>/cuemath?retryWrit
 ```
 
 **Dont use '<' or '>' in actual url.**
+
+## Project File Structure
+
+```
+- src
+    - controllers
+        - gameController.ts : Contains all the controller functions
+    - models
+        - Game.ts : Contains the game model
+    - routes
+        - gameRoutes.ts : Contains all the routes
+    - constants.ts : Constants used in the project
+    - db.ts : Database connection
+    - index.ts : Entry point of the server
+- .env.example : Example .env file
+```
+
 
 ## API Endpoints
 
