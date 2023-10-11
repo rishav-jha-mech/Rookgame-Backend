@@ -4,9 +4,10 @@ import express from "express";
 import http from "http";
 import { Types } from "mongoose";
 import { Server } from "socket.io";
-import { db } from "./db";
+import * as database from "./db";
 import Game from "./models/Game";
 import gameRoutes from "./routes/gameRoutes";
+import mongoose from "mongoose";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -253,7 +254,7 @@ io.on("connection", (socket) => {
       );
       socket.to(otherPlayer.socketId).emit("you-win", updatedGame);
       console.log("timer-ended-block");
-    } catch (error:any) {
+    } catch (error: any) {
       if (`${error}`.includes("Game Not Found")) {
         socket.emit("game-not-found");
       } else {
@@ -264,13 +265,13 @@ io.on("connection", (socket) => {
   });
 });
 
-db.once("open", function () {
+async function startServer() {
+  await database.connect();
   // Start your Express app here
   const PORT = process.env.PORT || 5000;
   httpServer.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT} 🚀`);
   });
-});
+}
 
-
-module.exports = app;
+startServer();

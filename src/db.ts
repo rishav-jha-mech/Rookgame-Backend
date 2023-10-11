@@ -1,26 +1,24 @@
+import mongoose from "mongoose";
 import { MONGO_DB_URL } from "./constants";
 
-import { MongoClient, ServerApiVersion } from "mongodb";
-
-export const db = new MongoClient(MONGO_DB_URL, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
-async function run() {
+export const connect = async (): Promise<void> => {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await db.connect();
-    // Send a ping to confirm a successful connection
-    await db.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await db.close();
+    await mongoose.connect(MONGO_DB_URL as string, {
+      useCreateIndex: true,
+      useUnifiedTopology: true,
+      useFindAndModify: false,
+      useNewUrlParser: true,
+    });
+    console.log("Connected to MongoDB 🚀");
+  } catch (error: unknown) {
+    console.error(error);
+    if (error instanceof Error) {
+      const errorMessage = error.toString();
+      process.exit(1);
+    }
   }
-}
-run().catch(console.dir);
+};
+
+export const disconnect = async (): Promise<void> => {
+  await mongoose.connection.close();
+};
