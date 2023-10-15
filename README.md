@@ -1,15 +1,11 @@
 ## Rook Game Backend
 
 <p align="center">
-  <img src="./doc/images/rook.svg" alt="rook" width="100"/>
+  <img src="./doc/images/snapshot.png" alt="snapshot" />
 </p>
 
 <p align="center">
   <a href="https://cue-math-hiring.vercel.app/" rel="noopener">Play Rook Game</a>
-</p>
-
-<p align="center">
-  <i> This Rook ain't no Castle!</i>
 </p>
 
 ## Table of Contents
